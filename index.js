@@ -68,12 +68,15 @@ fastify.register(require('@fastify/http-proxy'), {
     httpMethods: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT'],
     replyOptions: {
         rewriteRequestHeaders: (originalReq, headers) => {
-            return headers;
+            return {
+                ...headers,
+                'token': originalReq.headers.token || headers.token,
+                'admintoken': originalReq.headers.admintoken || headers.admintoken,
+                'authorization': originalReq.headers.authorization || headers.authorization,
+            };
         }
     }
 })
-
-
 
 const start = async () => {
     try {
