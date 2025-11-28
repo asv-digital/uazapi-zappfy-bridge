@@ -1,10 +1,13 @@
 require('dotenv').config()
 const fastify = require('fastify')({ logger: true })
 
-fastify.register(require('@fastify/cors'))
+fastify.register(require('@fastify/cors'), {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token', 'admintoken'],
+});
 
 const { saveWebhook } = require('./uazapi');
-
 
 fastify.post('/webhook', async (request, reply) => {
     const token = request.headers.token;
@@ -14,7 +17,7 @@ fastify.post('/webhook', async (request, reply) => {
         return reply.code(400).send({ error: 'URL is required in body' });
     }
 
-    const bridgeUrl = `${process.env.BRIDGE_URL}/webhook-bridge?target=${encodeURIComponent(originalBody.url)}`;
+       const bridgeUrl = `${process.env.BRIDGE_URL}/webhook-bridge?target=${encodeURIComponent(originalBody.url)}`;
 
     const newBody = {
         ...originalBody,
@@ -30,7 +33,6 @@ fastify.post('/webhook', async (request, reply) => {
     }
 });
 
-
 fastify.post('/webhook-bridge', async (request, reply) => {
     const { target } = request.query;
 
@@ -39,7 +41,6 @@ fastify.post('/webhook-bridge', async (request, reply) => {
     }
 
     const eventData = request.body;
-
     if (eventData.BaseUrl) {
         eventData.BaseUrl = process.env.CUSTOM_BASE_URL || eventData.BaseUrl;
     }
@@ -64,7 +65,12 @@ fastify.register(require('@fastify/http-proxy'), {
     upstream: process.env.TARGET_API_URL,
     prefix: '/',
     http2: false,
-    httpMethods: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT']
+    httpMethods: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT'],
+    replyOptions: {
+        rewriteRequestHeaders: (originalReq, headers) => {
+            return { ...headers, ...originalReq.headers };
+        }
+    }
 })
 
 
