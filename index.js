@@ -17,7 +17,7 @@ fastify.post('/webhook', async (request, reply) => {
         return reply.code(400).send({ error: 'URL is required in body' });
     }
 
-       const bridgeUrl = `${process.env.BRIDGE_URL}/webhook-bridge?target=${encodeURIComponent(originalBody.url)}`;
+    const bridgeUrl = `${process.env.BRIDGE_URL}/webhook-bridge?target=${encodeURIComponent(originalBody.url)}`;
 
     const newBody = {
         ...originalBody,
@@ -68,7 +68,7 @@ fastify.register(require('@fastify/http-proxy'), {
     httpMethods: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT'],
     replyOptions: {
         rewriteRequestHeaders: (originalReq, headers) => {
-            return { ...headers, ...originalReq.headers };
+            return headers;
         }
     }
 })
