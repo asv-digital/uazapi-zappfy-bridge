@@ -63,19 +63,23 @@ const start = async () => {
         }
     });
 
-    fastify.get('/', async (request, reply) => {
-        return reply.code(200).send({
-            "status": 200,
-            "message": "Welcome to the Zappfy API, it is working!",
-            "version": "2.0.0",
-        });
-    });
+
 
     await fastify.register(require('@fastify/http-proxy'), {
         upstream: process.env.TARGET_API_URL,
         prefix: '/',
         http2: false,
         httpMethods: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT'],
+        preHandler: async (request, reply) => {
+            const url = request.raw.url.split('?')[0];
+            if (request.method === 'GET' && url === '/') {
+                return reply.code(200).send({
+                    "status": 200,
+                    "message": "Welcome to the Zappfy API, it is working!",
+                    "version": "2.0.0",
+                });
+            }
+        },
         replyOptions: {
             rewriteRequestHeaders: (originalReq, headers) => {
                 return {
