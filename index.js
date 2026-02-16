@@ -66,11 +66,12 @@ const start = async () => {
 
 
     await fastify.register(require('@fastify/http-proxy'), {
-        upstream: process.env.TARGET_API_URL,
+        upstream: (process.env.TARGET_API_URL || '').replace(/\/$/, ''),
         prefix: '/',
         http2: false,
         httpMethods: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT'],
         preHandler: async (request, reply) => {
+            fastify.log.info(`[PROXY] ${request.method} ${request.url} -> Upstream`);
             const url = request.raw.url.split('?')[0];
             if (request.method === 'GET' && url === '/') {
                 return reply.code(200).send({
@@ -89,6 +90,10 @@ const start = async () => {
                     'authorization': originalReq.headers.authorization || headers.authorization,
                 };
             }
+        },
+        errorHandler: (error, request, reply) => {
+            fastify.log.error({ msg: 'Upstream Proxy Error', error });
+            reply.code(error.statusCode || 500).send(error);
         }
     })
 
