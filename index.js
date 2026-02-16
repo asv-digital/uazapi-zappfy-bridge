@@ -52,7 +52,8 @@ const start = async () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(eventData)
+                body: JSON.stringify(eventData),
+                signal: AbortSignal.timeout(10000)
             });
 
             return { success: true };
@@ -60,6 +61,14 @@ const start = async () => {
             fastify.log.error(error);
             return reply.code(500).send({ error: 'Forwarding failed' });
         }
+    });
+
+    fastify.get('/', async (request, reply) => {
+        return reply.code(200).send({
+            "status": 200,
+            "message": "Welcome to the Zappfy API, it is working!",
+            "version": "2.0.0",
+        });
     });
 
     await fastify.register(require('@fastify/http-proxy'), {
